@@ -1,0 +1,1 @@
+docker run --rm -it -e DISPLAY=host.docker.internal:0.0 ub18-jav:latest
