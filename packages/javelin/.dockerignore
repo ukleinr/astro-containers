@@ -1,0 +1,5 @@
+# Keep the build context minimal — only the Dockerfile and javelin-0.33.tar.gz are needed.
+*.ps1
+README.md
+workspace/
+*.tar
