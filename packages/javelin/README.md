@@ -41,7 +41,7 @@ docker build -t ub18-jav:latest .
 
 2. Run:
 
-- `run-docker-test.ps1`
+- `run-docker.ps1`
 
 Or run manually:
 
@@ -70,40 +70,23 @@ exit
 
 ## Dockerfile
 
-```dockerfile
-FROM ubuntu:18.04
+The build recipe lives in [`Dockerfile`](./Dockerfile) — the single source of truth. This
+README no longer embeds a copy (a duplicate silently drifts out of sync).
 
-ENV DEBIAN_FRONTEND=noninteractive
-WORKDIR /root
+Key design notes:
 
-# System deps + X11 test apps
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    gfortran \
-    libblas-dev \
-    liblapack-dev \
-    libatlas-base-dev \
-    python \
-    python-pip \
-    python-tk \
-    x11-apps \
-    ca-certificates \
-    && rm -rf /var/lib/apt/lists/*
-
-# Python deps
-RUN pip install --no-cache-dir numpy scipy matplotlib
-
-# Javelin sources
-COPY javelin-0.33.tar.gz /root/
-RUN tar -xvzf /root/javelin-0.33.tar.gz && rm /root/javelin-0.33.tar.gz
-
-# Build/install Javelin
-WORKDIR /root/javelin-0.33
-RUN python setup.py config_fc --fcompiler=gnu95 install
-
-# Default shell
-WORKDIR /root
-CMD ["bash"]
-```
+- **Base image `ubuntu:18.04` is EOL** (standard support ended 2023-04) and pinned on purpose:
+  JAVELIN 0.33 is Python 2.7-only, and 18.04 is the last Ubuntu shipping `python2.7` +
+  `python-pip`. For a fully reproducible build, pin by digest
+  (`FROM ubuntu:18.04@sha256:<digest>`); see the TODO at the top of the Dockerfile.
+- **Scientific stack is pinned** to the last Python 2.7-compatible releases —
+  `numpy==1.16.6`, `scipy==1.2.3`, `matplotlib==2.2.5`. Without pins the build is
+  non-deterministic and breaks if a version is yanked.
+- **JAVELIN provenance** — `javelin-0.33.tar.gz` is release 0.33 from
+  https://github.com/nye17/javelin:
+  `sha256: 7d583825c6b306600b918656c48406dcae2ae37c092a04cb7351fd1d0ccb5a68`
+- **X11 test apps are optional** — `xeyes`/`xclock` are installed only to verify `DISPLAY`
+  forwarding. Build with `--build-arg INSTALL_X11_APPS=false` for a leaner image.
 
 ---
 
@@ -130,3 +113,23 @@ If `demo.py show` / `plotcov.py` should display windows on Windows, keep using:
 ```powershell
 docker save -o ub18-jav.tar ub18-jav:latest
 ```
+
+---
+
+## Security note (X11 forwarding)
+
+The GUI path relies on VcXsrv started with **Disable access control**. This turns off X11
+host-based authentication: *any* process that can reach the X server port (TCP 6000) can read
+your keystrokes and screen. Acceptable on a trusted single-user workstation behind a firewall;
+do **not** use it on shared or untrusted networks. Safer alternatives: run VcXsrv with access
+control on and pass an `.Xauthority` cookie, or bind the X server to `localhost` only.
+
+---
+
+## License and attribution
+
+This repository packages JAVELIN; it does not relicense it. The wrapper (Dockerfile, scripts,
+docs) is covered by this repository's own `LICENSE`. **JAVELIN itself is distributed under its
+own upstream license** — see https://github.com/nye17/javelin. If you redistribute the built
+image, keep JAVELIN's license/notice intact and cite the papers listed above (Zu et al.
+2011/2013/2016, Mudd et al. 2018).
