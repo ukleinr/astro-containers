@@ -20,9 +20,11 @@
 - tarball `javelin-0.33.tar.gz` sha256: `7d583825c6b306600b918656c48406dcae2ae37c092a04cb7351fd1d0ccb5a68`.
 
 ## Открытые вопросы / следующие шаги
-- Изменения закоммичены и запушены в `origin/main` (`1555127` fix build, `39f7e5c` docs README, `51bca2e` docs handoff). Рабочее дерево чистое.
-- GUI-путь (`plotcov.py` / `demo.py show` через VcXsrv, `-e DISPLAY=host.docker.internal:0.0`) не тестировался headless — проверить на машине с запущенным X-сервером.
+- Всё закоммичено и запушено в `origin/main` (HEAD `c6b5928`). Рабочее дерево чистое. Build-фиксы: `1555127`; docs+тесты: `39f7e5c`, `51bca2e`, `72f65d8`, `8f5a79b`, `292dec0`, `c6b5928`.
+- Тестирование headless завершено: все 4 научные модели JAVELIN (`Cont_Model`, `Rmap_Model`, `Pmap_Model`, `Disk_Model`) + MCMC-ядро (8/9 emcee-unit) валидны. Непокрыто только GUI-отображение.
+- GUI-путь (`plotcov.py` / `demo.py show` через VcXsrv, `-e DISPLAY=host.docker.internal:0.0`) headless невозможен — проверить на машине с запущенным X-сервером (единственный оставшийся ручной тест).
 - Опционально: качать tarball в Dockerfile с проверкой sha256 либо перевести в Git LFS.
+- Возможный следующий пакет: новая астро-обёртка по образцу javelin (Dockerfile + README + PS1-хелперы + HANDOFF).
 
 ## Риски
 - Ubuntu 18.04 и Python 2.7 — EOL; образ намеренно legacy (единственный путь для JAVELIN 0.33). Без обновлений безопасности.
