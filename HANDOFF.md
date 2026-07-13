@@ -16,7 +16,7 @@
 - tarball `javelin-0.33.tar.gz` sha256: `7d583825c6b306600b918656c48406dcae2ae37c092a04cb7351fd1d0ccb5a68`.
 
 ## Открытые вопросы / следующие шаги
-- Изменения НЕ закоммичены — ждут явного `=>` (Conventional Commits, английский).
+- Изменения закоммичены и запушены в `origin/main` (`1555127` fix build, `39f7e5c` docs README, `51bca2e` docs handoff). Рабочее дерево чистое.
 - GUI-путь (`plotcov.py` / `demo.py show` через VcXsrv, `-e DISPLAY=host.docker.internal:0.0`) не тестировался headless — проверить на машине с запущенным X-сервером.
 - Опционально: качать tarball в Dockerfile с проверкой sha256 либо перевести в Git LFS.
 
