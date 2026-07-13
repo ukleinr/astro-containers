@@ -13,6 +13,8 @@
 - `docker build -t ub18-jav:latest packages/javelin` — успех (exit 0).
 - Версии в образе = пинам: numpy 1.16.6 / scipy 1.2.3 / matplotlib 2.2.5; `import javelin` — OK.
 - `docker run ... python demo.py test` — exit 0, без traceback (Fortran-ядро spear/cholesky через f2py считает, multiprocessing работает).
+- emcee-движок (`python -m unittest`-несовместим, nose-стиль `class Tests`; прогнан драйвером setUp+test_*): 8/9 pass. Единственный «фейл» `test_nan_lnprob` — артефакт numpy 1.16.6 (`isinf` на object-массиве кидает `TypeError` вместо ожидаемого тестом 2013 г. `ValueError`); движок ragged-вход всё равно отвергает — не дефект.
+- `test_pfix.py` (RM-пайплайн `Cont_Model`+`Rmap_Model`, `MPLBACKEND=Agg`) — exit 0: восстановленный `lag_Yelm` med ≈ 101.4 сут при истинном инжектированном 100.0; `p_fix` (tau=400, wid=2.0) работает.
 - tarball `javelin-0.33.tar.gz` sha256: `7d583825c6b306600b918656c48406dcae2ae37c092a04cb7351fd1d0ccb5a68`.
 
 ## Открытые вопросы / следующие шаги
