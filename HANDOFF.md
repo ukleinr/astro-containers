@@ -16,6 +16,7 @@
 - emcee-движок (`python -m unittest`-несовместим, nose-стиль `class Tests`; прогнан драйвером setUp+test_*): 8/9 pass. Единственный «фейл» `test_nan_lnprob` — артефакт numpy 1.16.6 (`isinf` на object-массиве кидает `TypeError` вместо ожидаемого тестом 2013 г. `ValueError`); движок ragged-вход всё равно отвергает — не дефект.
 - `test_pfix.py` (RM-пайплайн `Cont_Model`+`Rmap_Model`, `MPLBACKEND=Agg`) — exit 0: восстановленный `lag_Yelm` med ≈ 101.4 сут при истинном инжектированном 100.0; `p_fix` (tau=400, wid=2.0) работает.
 - `demo.py run` (полный интеграционный прогон, `MPLBACKEND=Agg`, 12 ядер) — exit 0, ~15 мин. Совместный douhat-фит восстановил `lag_Yelm` ≈ 100.6 и `lag_Zing` ≈ 250.7 (истины 100/250); pmap `lag_line` ≈ 100.6. Одиночный tophat-фит даёт вторичную моду (med ≈ 179, алиасинг) — штатно для бедной под-задачи, не баг. Все 4 цепочки посчитаны/сохранены. Самый тяжёлый этап — генерация плотного спир-сигнала (6000×6000 ковариация).
+- `thindisk/test_thindisk.py` (`Disk_Model`, аккреционный диск на 4 полосах, `MPLBACKEND=Agg`) — exit 0: `alpha` ≈ 1.49, `beta` ≈ 1.41, `sigma` ≈ 1.12 / `tau` ≈ 45 (согласуются с continuum-приором), per-band `scale` ≈ 1.0. Третья научная модель JAVELIN валидна.
 - tarball `javelin-0.33.tar.gz` sha256: `7d583825c6b306600b918656c48406dcae2ae37c092a04cb7351fd1d0ccb5a68`.
 
 ## Открытые вопросы / следующие шаги
