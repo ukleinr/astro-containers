@@ -1,4 +1,4 @@
-# HANDOFF — astro-containers / packages/javelin
+# HANDOFF — astro-containers (packages/javelin, packages/pypetal)
 
 ## Контекст
 Репозиторий Docker-обёрток для астро-инструментов. Первый пакет — JAVELIN 0.33 (reverberation mapping, только Python 2.7) в образе Ubuntu 18.04, GUI через X11/VcXsrv на Windows 10. Проведено ревью (код/подход/методы) и ремонт по плану `~/.claude/plans/silly-imagining-lightning.md`.
@@ -30,3 +30,38 @@
 - Ubuntu 18.04 и Python 2.7 — EOL; образ намеренно legacy (единственный путь для JAVELIN 0.33). Без обновлений безопасности.
 - Digest фиксирует конкретный образ; при refresh тега digest устареет — обновлять командой из комментария в `Dockerfile`.
 - VcXsrv «Disable access control» открывает X-сервер (TCP 6000) любому процессу — только доверенная одиночная машина.
+
+---
+
+# packages/pypetal (второй пакет)
+
+## Контекст
+pyPETaL — pipeline оценки временных лагов AGN (reverberation mapping): комбайнит PyCCF, PyZDCF, JAVELIN, PyROA + outlier-rejection (DRW GP) + детренд (LinMix) + weighting. Современный py3 (в отличие от legacy javelin). Задача: развернуть Docker по образцу javelin. Спека: `~/.claude/plans/packages-serialized-duckling.md`.
+
+## Решения (согласовано)
+- Объём: ядро (PyCCF/PyZDCF/PyROA) + PLIKE + LinMix. Без MICA2, без py2-JAVELIN-модуля (у него отдельный `packages/javelin` контейнер; в pypetal `run_javelin=False`).
+- Headless: `MPLBACKEND=Agg`, результаты/плоты в файлы. Без X11/VcXsrv.
+- Пины + digest базы.
+
+## Сделано
+- `packages/pypetal/`: `Dockerfile`, `.dockerignore`, `README.md`, `build-docker.ps1`, `run-docker.ps1`, `run-docker-workspace.ps1`, `workspace/put-your-data-here.txt` (зеркало javelin-шаблона, headless).
+- База `python:3.10-slim-bookworm` запинена по digest (3.10 = верх допустимого pypetal `<3.11`). Digest сверен `docker pull`+inspect: `sha256:9643927a6fc74bd81b0f1bbb5cce3cb4a491f46b4c5dbee770f28e575f180015` (Hub API давал устаревший `5cc3381b…` — использовано локальное авторитетное значение).
+- Установка: `pip install pypetal==1.0.1` (метаданные констрейнят стек); pypetal-исходники клонируются на commit `7289d13` (== PyPI 1.0.1) ради вендоренного PLIKE + `examples/`; LinMix — `git+…@933dbb1` (нет PyPI-релиза).
+- PLIKE: `plike_v4/plike_v4.0.f90` вендорен в репо pypetal (`wget` в `build_plike.sh` закомментирован) → компиляция `gfortran` без сети; `ARG BUILD_PLIKE=true` + `test -f plike_v4/plike` (build_plike.sh глотает ошибки).
+
+## Состояние (верифицировано)
+- `docker build -t py310-ptl:latest packages/pypetal` — exit 0. (Первый прогон упал на git-clone из-за краша Docker Desktop engine — не баг Dockerfile; после авто-рестарта демона пересборка успешна.)
+- Импорты OK: `pypetal.pipeline`, numpy/scipy/numba/PyROA/pyzdcf/linmix/astropy/matplotlib/emcee/celerite. Версии: `pypetal 1.0.1`, `numpy 1.22.4` (<1.23 ✓), `numba 0.56.4`, `scipy 1.13.1`, `astropy 5.3.4`, `matplotlib 3.8.4` — в диапазонах pypetal. `MPLBACKEND=agg`. MICA2-warning штатный (модуль исключён).
+- PLIKE-бинарь собран: `/root/pypetal/plike_v4/plike` (+x, 39232 B).
+- End-to-end headless: `pl.run_pipeline(run_pyccf=True, nsim=40, plot=False)` на `examples/dat/pyccf_lc1/2.dat` — создал `Yelm/pyccf/Yelm_ccf.dat`, `Yelm_ccf.pdf` (Agg рисует в файл), `_ccf_dists.dat` + скопировал light curves. Пайплайн считает и пишет headless.
+
+## Открытые вопросы / следующие шаги
+- Полный транзитивный lock: pypetal==1.0.1 задаёт диапазоны, pip взял свежие патчи (scipy 1.13.1, matplotlib 3.8.4). Для детерминизма — `pip freeze` в образе → `requirements.lock.txt` + `pip install -c` (follow-up).
+- Не запускался реальный PLIKE-прогон (`run_plike=True` через pyZDCF) — бинарь проверен на наличие/исполнимость; полный numeric-прогон опционален.
+- LinMix/PyROA/MICA2 — детренд протестирован только импортом; при необходимости прогнать `run_pyroa`/детренд на примерах.
+- Push: `=>` не давался — работа закоммичена локально, не запушена.
+
+## Риски
+- python:3.10-slim-bookworm digest фиксирует образ; при refresh тега устареет — обновлять командой из комментария в `Dockerfile`.
+- Docker Desktop engine падал под нагрузкой сборки (WSL2) — при повторе дать демону перезапуститься и пересобрать (apt-слой кэшируется).
+- Транзитивные версии не полностью зафиксированы (см. lock-follow-up) — сборка в разные даты может дать другие патчи внутри диапазонов pypetal.

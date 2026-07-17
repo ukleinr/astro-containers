@@ -1,0 +1,5 @@
+# Keep the build context minimal — only the Dockerfile is needed (sources are cloned in-build).
+*.ps1
+README.md
+workspace/
+*.tar
